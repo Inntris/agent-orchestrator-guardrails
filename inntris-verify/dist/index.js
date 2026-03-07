@@ -251,37 +251,70 @@ async function verifyWithInntris(analysis, options) {
     throw new Error("mode=api requires inntris_api_key and inntris_agent_id");
   }
 
+  const baseUrl = String(options.apiUrl || "").replace(/\/+$/, "");
+  const url = `${baseUrl}/admin/test-verify`;
+
+  const payload = {
+    agent_id: options.agentId,
+    action_type: analysis.action_type,
+    payload: {
+      risk_level: analysis.risk_level,
+      violations: analysis.violations,
+      files_analyzed: analysis.files_analyzed,
+      flagged_files: analysis.flagged_files
+    }
+  };
+
+  if (!payload || Object.keys(payload).length === 0) {
+    throw new Error("Inntris API payload is empty");
+  }
+
+  const redactUrl = (rawUrl) => {
+    try {
+      const parsed = new URL(rawUrl);
+      return `${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return rawUrl;
+    }
+  };
+
+  info(`[inntris-verify] API base URL input: ${redactUrl(baseUrl)}`);
+  info(`[inntris-verify] API final URL: ${redactUrl(url)}`);
+  info(`[inntris-verify] API key present: ${Boolean(options.apiKey)}`);
+  info(`[inntris-verify] Request body keys: ${Object.keys(payload).join(", ")}`);
+  info(`[inntris-verify] Nested payload keys: ${Object.keys(payload.payload).join(", ")}`);
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutSeconds * 1000);
   try {
-    const res = await fetch(`${options.apiUrl}/admin/test-verify`, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": options.apiKey },
       signal: controller.signal,
-      body: JSON.stringify({
-        agent_id: options.agentId,
-        action_type: analysis.action_type,
-        payload: {
-          risk_level: analysis.risk_level,
-          violations: analysis.violations,
-          files_analyzed: analysis.files_analyzed,
-          flagged_files: analysis.flagged_files
-        }
-      })
+      body: JSON.stringify(payload)
     });
 
-    let body;
-    try { body = await res.json(); } catch { body = null; }
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`Inntris API ${res.status} at ${redactUrl(url)}: ${text}`);
+    }
 
-    if (!body || !body.verdict) {
-      throw new Error(`Inntris response missing verdict (HTTP ${res.status})`);
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Inntris API returned non-JSON success response at ${redactUrl(url)}: ${text}`);
+    }
+
+    if (!data?.verdict) {
+      throw new Error(`Inntris API success response missing verdict: ${text}`);
     }
 
     return {
-      verdict: body.verdict,
-      reason: body.reason || `API verdict: ${body.verdict}`,
-      audit_id: body.audit_id,
-      trust_score: body.trust_score,
+      verdict: data.verdict,
+      reason: data.reason || `API verdict: ${data.verdict}`,
+      audit_id: data.audit_id,
+      trust_score: data.trust_score,
       mode_used: "api",
       risk_level: analysis.risk_level
     };
@@ -295,6 +328,7 @@ async function verifyWithInntris(analysis, options) {
     clearTimeout(timer);
   }
 }
+
 
 async function report(analysis, verify, failOnBlock) {
   const verdictLabel = verify.verdict === "approved" ? "✅ PASS" : verify.verdict === "blocked" ? "❌ BLOCK" : "ℹ️ INFO";

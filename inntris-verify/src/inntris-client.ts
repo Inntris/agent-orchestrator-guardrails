@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import { AnalysisResult } from './types';
 
 export type VerifyMode = 'auto' | 'api' | 'local';
@@ -20,6 +21,15 @@ export interface VerifyResult {
   risk_level: string;
 }
 
+function redactUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return rawUrl;
+  }
+}
+
 export async function verifyWithInntris(analysis: AnalysisResult, options: ClientOptions): Promise<VerifyResult> {
   const hasCreds = Boolean(options.apiKey && options.agentId);
 
@@ -36,38 +46,65 @@ export async function verifyWithInntris(analysis: AnalysisResult, options: Clien
     throw new Error('mode=api requires inntris_api_key and inntris_agent_id');
   }
 
+  const baseUrl = String(options.apiUrl || '').replace(/\/+$/, '');
+  const requestUrl = `${baseUrl}/admin/test-verify`;
+
+  const payload = {
+    agent_id: options.agentId,
+    action_type: analysis.action_type,
+    payload: {
+      risk_level: analysis.risk_level,
+      violations: analysis.violations,
+      files_analyzed: analysis.files_analyzed,
+      flagged_files: analysis.flagged_files
+    }
+  };
+
+  if (!payload || Object.keys(payload).length === 0) {
+    throw new Error('Inntris API payload is empty');
+  }
+
+  core.info(`[inntris-verify] API base URL input: ${redactUrl(baseUrl)}`);
+  core.info(`[inntris-verify] API final URL: ${redactUrl(requestUrl)}`);
+  core.info(`[inntris-verify] API key present: ${Boolean(options.apiKey)}`);
+  core.info(`[inntris-verify] Request body keys: ${Object.keys(payload).join(', ')}`);
+  core.info(`[inntris-verify] Nested payload keys: ${Object.keys(payload.payload).join(', ')}`);
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutSeconds * 1000);
 
   try {
-    const response = await fetch(`${options.apiUrl}/admin/test-verify`, {
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': options.apiKey as string
       },
       signal: controller.signal,
-      body: JSON.stringify({
-        agent_id: options.agentId,
-        action_type: analysis.action_type,
-        payload: {
-          risk_level: analysis.risk_level,
-          violations: analysis.violations,
-          files_analyzed: analysis.files_analyzed
-        }
-      })
+      body: JSON.stringify(payload)
     });
 
-    const body = await response.json();
+    const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`Inntris API ${response.status} at ${redactUrl(requestUrl)}: ${text}`);
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      throw new Error(`Inntris API returned non-JSON success response at ${redactUrl(requestUrl)}: ${text}`);
+    }
+
     if (!body?.verdict) {
-      throw new Error(`Inntris response missing verdict (HTTP ${response.status})`);
+      throw new Error(`Inntris API success response missing verdict: ${text}`);
     }
 
     return {
-      verdict: body.verdict,
-      reason: body.reason ?? `API verdict: ${body.verdict}`,
-      audit_id: body.audit_id,
-      trust_score: body.trust_score,
+      verdict: body.verdict as VerifyResult['verdict'],
+      reason: (body.reason as string | undefined) ?? `API verdict: ${body.verdict}`,
+      audit_id: body.audit_id as string | undefined,
+      trust_score: body.trust_score as number | undefined,
       mode_used: 'api',
       risk_level: analysis.risk_level
     };

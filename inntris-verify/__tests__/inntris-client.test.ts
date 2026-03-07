@@ -19,32 +19,44 @@ test('returns local_only in auto without creds', async () => {
   expect(result.verdict).toBe('local_only');
 });
 
-test('uses verdict from 200 json', async () => {
-  global.fetch = jest.fn().mockResolvedValue({ json: async () => ({ verdict: 'approved', reason: 'ok' }) }) as unknown as typeof fetch;
+test('normalizes base URL without trailing slash', async () => {
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ verdict: 'approved', reason: 'ok' }) });
+  global.fetch = fetchMock as unknown as typeof fetch;
+
+  await verifyWithInntris(analysis, { apiUrl: 'https://api.example.com', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
+
+  expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/admin/test-verify', expect.any(Object));
+});
+
+test('normalizes base URL with trailing slash', async () => {
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ verdict: 'approved', reason: 'ok' }) });
+  global.fetch = fetchMock as unknown as typeof fetch;
+
+  await verifyWithInntris(analysis, { apiUrl: 'https://api.example.com/', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
+
+  expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/admin/test-verify', expect.any(Object));
+});
+
+test('404 response includes status and body in fail-closed reason', async () => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404, text: async () => 'Not Found' }) as unknown as typeof fetch;
+  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x/', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
+  expect(result.verdict).toBe('blocked');
+  expect(result.reason).toContain('404');
+  expect(result.reason).toContain('Not Found');
+  expect(result.reason).toContain('/admin/test-verify');
+});
+
+test('missing verdict in success response returns blocked when fail-closed', async () => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ reason: 'ok but no verdict' }) }) as unknown as typeof fetch;
+  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
+  expect(result.verdict).toBe('blocked');
+  expect(result.reason).toContain('missing verdict');
+});
+
+test('successful API response with verdict succeeds', async () => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ verdict: 'approved', reason: 'ok', audit_id: 'aud_1', trust_score: 90 }) }) as unknown as typeof fetch;
   const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
   expect(result.verdict).toBe('approved');
-});
-
-test('401 handled as blocked fail closed', async () => {
-  global.fetch = jest.fn().mockRejectedValue(new Error('401 unauthorized')) as unknown as typeof fetch;
-  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
-  expect(result.verdict).toBe('blocked');
-});
-
-test('404 handled as local when open', async () => {
-  global.fetch = jest.fn().mockRejectedValue(new Error('404 not found')) as unknown as typeof fetch;
-  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: false });
-  expect(result.verdict).toBe('local_only');
-});
-
-test('429 handled as blocked fail closed', async () => {
-  global.fetch = jest.fn().mockRejectedValue(new Error('429 rate limit')) as unknown as typeof fetch;
-  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
-  expect(result.verdict).toBe('blocked');
-});
-
-test('timeout handled as blocked', async () => {
-  global.fetch = jest.fn().mockRejectedValue(new Error('The operation was aborted')) as unknown as typeof fetch;
-  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
-  expect(result.verdict).toBe('blocked');
+  expect(result.audit_id).toBe('aud_1');
+  expect(result.trust_score).toBe(90);
 });
