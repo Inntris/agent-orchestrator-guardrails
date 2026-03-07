@@ -136,7 +136,7 @@ async function report(analysis, verify, failOnBlock) {
 
 async function run() {
   if (github.context.eventName !== 'pull_request') return core.setFailed(`This action only supports pull_request events. Received: ${github.context.eventName}`);
-  const token = process.env.GITHUB_TOKEN;
+  const token = core.getInput('github_token') || process.env.GITHUB_TOKEN;
   if (!token) return core.setFailed('GITHUB_TOKEN is required');
   const pr = github.context.payload.pull_request;
   if (!pr) return core.setFailed('No pull request payload found');

@@ -16,7 +16,7 @@ async function run(): Promise<void> {
     return;
   }
 
-  const token = process.env.GITHUB_TOKEN;
+  const token = core.getInput('github_token') || process.env.GITHUB_TOKEN;
   if (!token) {
     core.setFailed('GITHUB_TOKEN is required');
     return;

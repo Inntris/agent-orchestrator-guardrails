@@ -19,7 +19,7 @@ Action-level governance demo for Composio Agent Orchestrator: **Inntris Verified
 
 ### Workflow used
 
-See `.github/workflows/inntris-verified.yml` for the exact action wiring and `.inntris.yml` for policy configuration.
+See `.github/workflows/inntris-verified.yml` for the exact action wiring (this demo uses `./inntris-verify` so CI runs immediately in this repository) and `.inntris.yml` for policy configuration.
 
 ## Inntris Verify Action source
 

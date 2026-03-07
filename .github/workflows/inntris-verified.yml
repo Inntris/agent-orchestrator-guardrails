@@ -13,12 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: inntris/inntris-verify@v1
+      - uses: ./inntris-verify
         with:
           inntris_api_url: ${{ secrets.INNTRIS_API_URL }}
           inntris_api_key: ${{ secrets.INNTRIS_API_KEY }}
           inntris_agent_id: ${{ secrets.INNTRIS_AGENT_ID }}
           mode: auto
+          github_token: ${{ github.token }}
           fail_on_block: "true"
           fail_on_api_error: "true"
           timeout_seconds: "10"

@@ -19,6 +19,9 @@ inputs:
     description: Verification mode (auto, api, local)
     required: false
     default: auto
+  github_token:
+    description: GitHub token for listing pull request files
+    required: false
   fail_on_block:
     description: Fail the action when verdict is blocked
     required: false
