@@ -1,0 +1,51 @@
+name: Inntris Verify
+description: Verify pull requests against Inntris policy and API governance
+inputs:
+  inntris_api_url:
+    description: Inntris API base URL
+    required: false
+    default: https://inntris-api.up.railway.app
+  inntris_api_key:
+    description: Inntris API key
+    required: false
+  inntris_agent_id:
+    description: Inntris agent identifier
+    required: false
+  policy_config:
+    description: Path to Inntris policy config
+    required: false
+    default: .inntris.yml
+  mode:
+    description: Verification mode (auto, api, local)
+    required: false
+    default: auto
+  fail_on_block:
+    description: Fail the action when verdict is blocked
+    required: false
+    default: 'true'
+  fail_on_api_error:
+    description: Fail closed when API request errors
+    required: false
+    default: 'true'
+  timeout_seconds:
+    description: API timeout in seconds
+    required: false
+    default: '10'
+outputs:
+  verdict:
+    description: approved|blocked|rate_limited|local_only
+  reason:
+    description: Verification reason
+  audit_id:
+    description: Inntris audit id
+  trust_score:
+    description: Trust score
+  violations:
+    description: JSON string of policy violations
+  mode_used:
+    description: api|local
+  risk_level:
+    description: Derived risk level
+runs:
+  using: node20
+  main: dist/index.js
