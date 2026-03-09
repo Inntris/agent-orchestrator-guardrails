@@ -45,6 +45,18 @@ test('404 agent not found is converted to precise config error', async () => {
   expect(result.reason).toContain('INNTRIS_AGENT_ID');
 });
 
+
+
+test('500 response is classified as backend crash with precise message', async () => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, text: async () => '{"detail":"internal error"}' }) as unknown as typeof fetch;
+  const result = await verifyWithInntris(analysis, { apiUrl: 'http://x/', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });
+  expect(result.verdict).toBe('blocked');
+  expect(result.reason).toContain('backend crashed');
+  expect(result.reason).toContain('/admin/test-verify');
+  expect(result.reason).toContain('500');
+});
+
+
 test('missing verdict in success response returns blocked when fail-closed', async () => {
   global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ reason: 'ok but no verdict' }) }) as unknown as typeof fetch;
   const result = await verifyWithInntris(analysis, { apiUrl: 'http://x', apiKey: 'k', agentId: 'a', timeoutSeconds: 1, mode: 'api', failOnApiError: true });

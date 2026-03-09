@@ -106,6 +106,9 @@ export async function verifyWithInntris(analysis: AnalysisResult, options: Clien
       if (response.status === 404 && lower.includes('agent') && lower.includes('not found')) {
         throw new Error(`Inntris API rejected agent_id: agent not found (format=${agentIdType}, fingerprint=${getAgentIdFingerprint(options.agentId)}). Verify INNTRIS_AGENT_ID in repo secrets.`);
       }
+      if (response.status >= 500) {
+        throw new Error(`Inntris backend crashed at /admin/test-verify (HTTP ${response.status}) at ${redactUrl(requestUrl)}: ${text}`);
+      }
       throw new Error(`Inntris API ${response.status} at ${redactUrl(requestUrl)}: ${text}`);
     }
 
