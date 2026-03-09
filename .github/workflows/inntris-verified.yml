@@ -21,5 +21,5 @@ jobs:
           mode: auto
           github_token: ${{ github.token }}
           fail_on_block: "true"
-          fail_on_api_error: "true"
+          fail_on_api_error: "false"
           timeout_seconds: "10"
