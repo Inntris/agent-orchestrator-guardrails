@@ -1,0 +1,26 @@
+sensitive_paths:
+  enabled: true
+  severity: high
+  prefixes:
+    - .github/workflows/
+    - scripts/
+    - packages/
+  filenames:
+    - agent-orchestrator.yaml
+    - agent-orchestrator.yaml.example
+    - Dockerfile
+    - docker-compose.yml
+
+dependency_changes:
+  enabled: true
+  severity: medium
+  filenames:
+    - package.json
+    - pnpm-lock.yaml
+    - package-lock.json
+    - yarn.lock
+
+secret_detection:
+  enabled: true
+  severity: critical
+  extra_patterns: []
