@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 
 function getInput(name, options = {}) {
   const key = `INPUT_${name.replace(/ /g, "_").toUpperCase()}`;
@@ -238,6 +239,18 @@ async function listPrFiles(owner, repo, prNumber, token) {
 async function verifyWithInntris(analysis, options) {
   const hasCreds = Boolean(options.apiKey && options.agentId);
 
+  const getAgentIdFingerprint = (agentId) => {
+    if (!agentId) return "missing";
+    return crypto.createHash("sha256").update(agentId).digest("hex").slice(0, 10);
+  };
+
+  const classifyAgentId = (agentId) => {
+    if (!agentId) return "missing";
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(agentId)) return "uuid_like";
+    if (/^[a-z0-9][a-z0-9_-]{2,127}$/i.test(agentId)) return "slug_like";
+    return "unknown";
+  };
+
   if (options.mode === "local" || (options.mode === "auto" && !hasCreds)) {
     const localVerdict = analysis.violations.length > 0 ? "blocked" : "approved";
     return {
@@ -278,11 +291,14 @@ async function verifyWithInntris(analysis, options) {
     }
   };
 
+  const agentIdType = classifyAgentId(options.agentId);
   info(`[inntris-verify] API base URL input: ${redactUrl(baseUrl)}`);
   info(`[inntris-verify] API final URL: ${redactUrl(url)}`);
   info(`[inntris-verify] API key present: ${Boolean(options.apiKey)}`);
   info(`[inntris-verify] Request body keys: ${Object.keys(payload).join(", ")}`);
   info(`[inntris-verify] Nested payload keys: ${Object.keys(payload.payload).join(", ")}`);
+  info(`[inntris-verify] agent_id present: ${Boolean(options.agentId)} | length: ${options.agentId ? options.agentId.length : 0} | fingerprint: ${getAgentIdFingerprint(options.agentId)} | format: ${agentIdType}`);
+  info("[inntris-verify] Backend agent_id format expectation is backend-defined; validate INNTRIS_AGENT_ID against your Inntris dashboard/API.");
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutSeconds * 1000);
@@ -296,6 +312,10 @@ async function verifyWithInntris(analysis, options) {
 
     const text = await res.text();
     if (!res.ok) {
+      const lower = text.toLowerCase();
+      if (res.status === 404 && lower.includes("agent") && lower.includes("not found")) {
+        throw new Error(`Inntris API rejected agent_id: agent not found (format=${agentIdType}, fingerprint=${getAgentIdFingerprint(options.agentId)}). Verify INNTRIS_AGENT_ID in repo secrets.`);
+      }
       throw new Error(`Inntris API ${res.status} at ${redactUrl(url)}: ${text}`);
     }
 
