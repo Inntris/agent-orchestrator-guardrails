@@ -114,4 +114,4 @@ Teams running AI agents that open pull requests, execute code changes, or modify
 
 ## License
 
-This demo repo is public for verification purposes. The Inntris platform is licensed under [BSL 1.1](https://github.com/KingsmanRon/Inntris/blob/main/LICENSE).
+This demo repo is public for verification purposes. The Inntris platform is licensed under [BSL 1.1]
