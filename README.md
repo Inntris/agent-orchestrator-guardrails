@@ -110,7 +110,7 @@ Teams running AI agents that open pull requests, execute code changes, or modify
 
 - [Inntris — Product](https://www.inntris.com)
 - [Inntris — Docs](https://www.inntris.com/docs)
-- [Contact](https://www.inntris.com/contact)
+- [Contact](https://www.inntris.com/#contact)
 
 ## License
 
