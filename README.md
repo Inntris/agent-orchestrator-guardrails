@@ -1,4 +1,4 @@
-# agent-orchestrator-guardrails
+## agent-orchestrator-guardrails
 
 Action-level governance for AI agent pull requests. When an agent opens a PR, Inntris evaluates it against your policy, issues a signed **PASS** or **BLOCK** verdict, and anchors a cryptographic receipt on-chain — verifiable by anyone, without access to your infrastructure.
 
