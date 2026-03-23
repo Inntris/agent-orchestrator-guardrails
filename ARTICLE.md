@@ -23,7 +23,22 @@ Composio Agent Orchestrator solves orchestration. Inntris adds action-level gove
 4. Action calls Inntris API when creds exist; otherwise local-only verdict
 5. Job summary renders PASS/BLOCK, risk level, violations table, warnings, and audit metadata
 
+## Proof artifacts the demo should expose
+A compelling public demo needs **two proof records**, not just one:
+
+1. **BLOCK proof** — shows governance refusing a risky `admin_action`.
+2. **PASS proof** — shows a normal low-risk action being evaluated, approved, signed, and anchored.
+
+The BLOCK proof demonstrates enforcement, but the PASS proof demonstrates operability and developer confidence. Together they show the system is not only capable of denial, but also capable of allowing legitimate work with verifiable receipts.
+
+## Recommended controlled PASS scenario
+- Branch from a clean base.
+- Change only docs/examples content (for example `docs/pass-demo-change.md`).
+- Avoid `.github/workflows/`, `scripts/`, `packages/`, dependency manifests, and secret-like strings.
+- Capture the resulting PASS `audit_id` / receipt link and publish it alongside the BLOCK artifact.
+
 ## Why this is compelling
 - Protects automation pipelines from risky self-modifying changes
 - Makes governance visible directly in the PR conversation
 - Works in forks and OSS contexts without requiring secrets
+- Produces public proof for both approval and denial paths

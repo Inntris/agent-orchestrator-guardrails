@@ -17,6 +17,24 @@ Action-level governance demo for Composio Agent Orchestrator: **Inntris Verified
 - PASS PR: `TODO-add-pass-pr-link`
 - BLOCK PR: `TODO-add-block-pr-link`
 
+### Public proof artifacts
+
+For this demo to feel complete to evaluators, it needs **both** receipt types publicly visible:
+
+- **PASS receipt** — a controlled safe action that was evaluated, approved, signed, and anchored.
+- **BLOCK receipt** — a risky action that was evaluated, denied, and anchored as a governance proof record.
+
+The BLOCK path proves enforcement. The PASS path proves the full happy-path verification loop developers actually want to install.
+
+Add these links once available:
+
+- PASS receipt / audit proof: `TODO-add-pass-receipt-link`
+- BLOCK receipt / audit proof: `TODO-add-block-receipt-link`
+
+### Recommended PASS scenario
+
+Use the dedicated docs-only change in `docs/pass-demo-change.md` as the clean PASS artifact source. That change is designed to stay out of sensitive paths and resolve to the low-risk `api_call` path rather than `admin_action`.
+
 ### Workflow used
 
 See `.github/workflows/inntris-verified.yml` for the exact action wiring (this demo uses `./inntris-verify` so CI runs immediately in this repository) and `.inntris.yml` for policy configuration.
