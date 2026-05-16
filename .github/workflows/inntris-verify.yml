@@ -18,6 +18,7 @@ jobs:
       INNTRIS_API_URL: ${{ secrets.INNTRIS_API_URL }}
       INNTRIS_API_KEY: ${{ secrets.INNTRIS_API_KEY }}
       INNTRIS_AGENT_ID: ${{ secrets.INNTRIS_AGENT_ID }}
+      INNTRIS_DEMO_MODE: "true"
       INNTRIS_ACTOR_TYPE: ai_agent
       INNTRIS_BRANCH_TARGET: ${{ github.base_ref }}
       PROMPTFOO_RESULTS_PATH: demo/promptfoo/results.json
