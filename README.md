@@ -101,7 +101,7 @@ The focused workflow is:
 .github/workflows/inntris-verify.yml
 ```
 
-It runs on pull requests, identifies changed files, reads `.inntris.yml`, optionally reads Promptfoo evidence, calls the Inntris API when credentials are present, and otherwise runs in deterministic demo mode.
+It runs on pull requests, identifies changed files, reads `.inntris.yml`, optionally reads Promptfoo evidence, and prints a clean PASS/BLOCK summary. The public demo workflow sets `INNTRIS_DEMO_MODE=true` so recordings stay deterministic even if repository secrets exist.
 
 Required repository secrets for real API mode:
 
@@ -111,7 +111,7 @@ INNTRIS_API_KEY
 INNTRIS_AGENT_ID
 ```
 
-When those secrets are missing, the workflow still shows the buyer-visible PASS/BLOCK behavior in demo mode.
+To connect real Inntris receipts, set `INNTRIS_DEMO_MODE=false` in `.github/workflows/inntris-verify.yml` after those secrets point at the live receipt endpoint. When credentials are missing, the verifier automatically falls back to deterministic demo receipts.
 
 ## How to trigger PASS
 
