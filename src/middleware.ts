@@ -1,3 +1,3 @@
 export function middleware() {
-  return new Response("Inntris BLOCK demo: middleware is production-sensitive.");
+  return new Response("Inntris BLOCK demo: AI attempted to alter production middleware.");
 }
