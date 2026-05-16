@@ -1,26 +1,25 @@
-sensitive_paths:
-  enabled: true
-  severity: high
-  prefixes:
-    - .github/workflows/
-    - scripts/
-    - packages/
-  filenames:
-    - agent-orchestrator.yaml
-    - agent-orchestrator.yaml.example
-    - Dockerfile
-    - docker-compose.yml
+protected_paths:
+  - "src/auth/**"
+  - "src/middleware.ts"
+  - "supabase/migrations/**"
+  - ".github/workflows/**"
+  - "infra/**"
+  - "**/.env*"
 
-dependency_changes:
-  enabled: true
-  severity: medium
-  filenames:
-    - package.json
-    - pnpm-lock.yaml
-    - package-lock.json
-    - yarn.lock
+rules:
+  - name: "Block AI changes to protected production paths"
+    when:
+      actor_type: "ai_agent"
+      branch_target: "main"
+      paths_match: "protected_paths"
+    verdict: "block"
+    reason: "AI-generated PR touched protected production-sensitive files"
 
-secret_detection:
-  enabled: true
-  severity: critical
-  extra_patterns: []
+  - name: "Allow low-risk documentation and UI changes"
+    when:
+      actor_type: "ai_agent"
+      paths_match:
+        - "docs/**"
+        - "src/components/**"
+    verdict: "allow"
+    reason: "AI-generated PR only touched approved low-risk paths"

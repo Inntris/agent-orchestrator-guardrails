@@ -1,0 +1,49 @@
+name: Inntris Verification
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  inntris-verify:
+    name: Inntris Verification
+    runs-on: ubuntu-latest
+    env:
+      INNTRIS_API_URL: ${{ secrets.INNTRIS_API_URL }}
+      INNTRIS_API_KEY: ${{ secrets.INNTRIS_API_KEY }}
+      INNTRIS_AGENT_ID: ${{ secrets.INNTRIS_AGENT_ID }}
+      INNTRIS_ACTOR_TYPE: ai_agent
+      INNTRIS_BRANCH_TARGET: ${{ github.base_ref }}
+      PROMPTFOO_RESULTS_PATH: demo/promptfoo/results.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Identify changed files
+        shell: bash
+        run: |
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed-files.txt
+          {
+            echo "Changed files:"
+            cat changed-files.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run Inntris AI PR Protection
+        shell: bash
+        run: |
+          node scripts/inntris-verify.mjs \
+            --changed-files changed-files.txt \
+            --policy .inntris.yml

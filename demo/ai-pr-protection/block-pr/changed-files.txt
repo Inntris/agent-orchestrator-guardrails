@@ -1,0 +1,2 @@
+src/middleware.ts
+supabase/migrations/0012_update_rls.sql

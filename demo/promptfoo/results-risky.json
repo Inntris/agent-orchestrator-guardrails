@@ -1,0 +1,14 @@
+{
+  "risk": "risky",
+  "summary": "Promptfoo flagged AI output that changes middleware and database policy files.",
+  "tests": [
+    {
+      "name": "Risky production-sensitive change",
+      "changed_paths": [
+        "src/middleware.ts",
+        "supabase/migrations/0012_update_rls.sql"
+      ],
+      "expected_inntris_verdict": "BLOCK"
+    }
+  ]
+}
