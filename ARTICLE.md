@@ -1,45 +1,36 @@
-# Inntris x Composio Demo Teardown
+# AI PR Protection for GitHub
 
 ## Thesis
-Composio Agent Orchestrator solves orchestration. Inntris adds action-level governance. A green CI run is not the same as a safe PR.
 
-## What was built
-- A reusable GitHub Action (`inntris-verify`) that analyzes PR file diffs, applies policy checks, and optionally calls Inntris API for live verification + `audit_id`.
-- A demo workflow in this repository that runs on pull requests and blocks risky changes.
-- A repository-level `.inntris.yml` policy file tuned for orchestrator repos.
+AI coding agents can open pull requests and edit production-sensitive files. CI can still pass. The missing control is a required policy gate that asks whether the agent was allowed to make that change and produces proof for the decision.
 
-## Key design points
-- API endpoint: `POST {INNTRIS_API_URL}/admin/test-verify` with `X-API-Key`
-- Optional API creds (supports forks/no-secrets through `mode=auto` local mode)
-- Verdict comes from JSON `verdict` field (source of truth)
-- Fail-closed behavior for API errors by default
-- No glob matching in v1 policy config
-- Secret scanner inspects only added patch lines and never logs secret material
+## What this demo shows
 
-## User journey
-1. Developer opens PR
-2. `inntris-verified.yml` runs
-3. Action classifies risk and chooses `action_type`
-4. Action calls Inntris API when creds exist; otherwise local-only verdict
-5. Job summary renders PASS/BLOCK, risk level, violations table, warnings, and audit metadata
+Inntris adds a required GitHub Action check to pull requests:
 
-## Proof artifacts the demo should expose
-A compelling public demo needs **two proof records**, not just one:
+1. The action identifies changed files.
+2. It reads `.inntris.yml`.
+3. It optionally includes Promptfoo risk evidence.
+4. It returns PASS or BLOCK.
+5. It creates a verification receipt.
 
-1. **BLOCK proof** — shows governance refusing a risky `admin_action`.
-2. **PASS proof** — shows a normal low-risk action being evaluated, approved, signed, and anchored.
+The narrow offer is AI PR Protection for GitHub: $200/month per repo, setup included for the first 3 design partners.
 
-The BLOCK proof demonstrates enforcement, but the PASS proof demonstrates operability and developer confidence. Together they show the system is not only capable of denial, but also capable of allowing legitimate work with verifiable receipts.
+## Why it matters
 
-## Recommended controlled PASS scenario
-- Branch from a clean base.
-- Change only docs/examples content (for example `docs/pass-demo-change.md` or `examples/pass-demo-safe.txt`).
-- Follow `docs/pass-demo-playbook.md` so the branch is created from a clean base and contains only the safe diff.
-- Avoid `.github/workflows/`, `scripts/`, `packages/`, dependency manifests, and secret-like strings.
-- Capture the resulting PASS `audit_id` / receipt link and publish it alongside the BLOCK artifact.
+Normal CI answers: does the code build and do tests pass?
 
-## Why this is compelling
-- Protects automation pipelines from risky self-modifying changes
-- Makes governance visible directly in the PR conversation
-- Works in forks and OSS contexts without requiring secrets
-- Produces public proof for both approval and denial paths
+Inntris answers: was this AI-generated PR allowed to touch this production surface, and where is the evidence?
+
+## Demo script
+
+Show two PRs:
+
+- PASS: docs and safe UI component only.
+- BLOCK: middleware and database migration.
+
+Then show the GitHub Action summary and the receipt URL.
+
+## Buyer-safe positioning
+
+Inntris adds an AI-specific policy gate, creates verification evidence, and supports review and audit. It does not replace CI, code review, secure development, or security testing.

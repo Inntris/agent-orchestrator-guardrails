@@ -1,0 +1,16 @@
+{
+  "name": "inntris-ai-pr-protection-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Focused AI PR Protection demo for Inntris.",
+  "type": "module",
+  "scripts": {
+    "demo:block": "node scripts/inntris-verify.mjs --changed-files demo/ai-pr-protection/block-pr/changed-files.txt --actor-type ai_agent --branch-target main",
+    "demo:pass": "node scripts/inntris-verify.mjs --changed-files demo/ai-pr-protection/pass-pr/changed-files.txt --actor-type ai_agent --branch-target main",
+    "demo:promptfoo:risky": "node scripts/inntris-verify.mjs --changed-files demo/ai-pr-protection/block-pr/changed-files.txt --promptfoo-results demo/promptfoo/results-risky.json --actor-type ai_agent --branch-target main",
+    "demo:promptfoo:safe": "node scripts/inntris-verify.mjs --changed-files demo/ai-pr-protection/pass-pr/changed-files.txt --promptfoo-results demo/promptfoo/results-safe.json --actor-type ai_agent --branch-target main"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

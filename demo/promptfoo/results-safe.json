@@ -1,0 +1,14 @@
+{
+  "risk": "safe",
+  "summary": "Promptfoo rated the AI output as low-risk documentation and UI-only work.",
+  "tests": [
+    {
+      "name": "Low-risk docs and UI change",
+      "changed_paths": [
+        "docs/setup.md",
+        "src/components/SafeBanner.tsx"
+      ],
+      "expected_inntris_verdict": "PASS"
+    }
+  ]
+}
