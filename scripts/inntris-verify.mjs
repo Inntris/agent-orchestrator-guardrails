@@ -5,6 +5,12 @@ import { basename } from "node:path";
 const DEFAULT_POLICY = ".inntris.yml";
 const DEFAULT_RECEIPT = "demo/ai-pr-protection/receipt.json";
 
+function envFlag(name, fallback = false) {
+  const value = process.env[name];
+  if (value === undefined) return fallback;
+  return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
+}
+
 function argValue(name, fallback = undefined) {
   const index = process.argv.indexOf(name);
   if (index === -1) return fallback;
@@ -155,8 +161,9 @@ function decide({ actorType, branchTarget, changedFiles, policy, promptfoo }) {
 async function createReceipt(payload) {
   const hasApiCredentials =
     process.env.INNTRIS_API_URL && process.env.INNTRIS_API_KEY && process.env.INNTRIS_AGENT_ID;
+  const demoMode = envFlag("INNTRIS_DEMO_MODE");
 
-  if (!hasApiCredentials) {
+  if (demoMode || !hasApiCredentials) {
     const demoReceipt = {
       ...payload,
       receipt_url: `https://www.inntris.com/verify/demo-${payload.verdict.toLowerCase()}`,
